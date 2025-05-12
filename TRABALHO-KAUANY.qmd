@@ -1,0 +1,124 @@
+---
+title: "Acesso à Eletricidade: Uma Análise Comparativa"
+author: "Kauany Kanitz dos Santos"
+format: 
+  html:
+    theme: cosmo
+    toc: true
+    toc-location: left
+    number-sections: true
+    self-contained: true
+editor: visual
+---
+
+```{r setup, include=FALSE}
+# Configurações globais
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+# Carregar pacotes necessários
+library(WDI)      # Para baixar os dados do Banco Mundial
+library(ggplot2)  # Para criar gráficos
+library(scales)   # Para formatar o eixo y em percentual
+library(dplyr)    # Para manipulação de dados
+```
+---
+
+------------------------------------------------------------------------
+
+## Introdução
+
+Este trabalho analisa o acesso à eletricidade no Brasil e nos Estados Unidos, utilizando dados do Banco Mundial (indicador **EG. ELC. ACCS. ZS**). Apresentamos três análises: um gráfico de painel para o Brasil, um gráfico de corte transversal comparando Brasil e EUA em 2022, e uma série temporal para o Brasil.
+
+## Dados e Gráficos
+
+## Gráfico de Painel: Acesso à Eletricidade ao Longo do Tempo (Brasil)
+
+Este gráfico de painel apresenta a evolução do percentual de acesso à eletricidade no Brasil ao longo dos anos, destacando o progresso ao longo do período de 2000 a 2022.
+
+```{r}
+# Baixar dados para o Brasil
+eletricidade_br <- WDI(country = "BR", 
+                       indicator = "EG.ELC.ACCS.ZS", 
+                       start = 2000, 
+                       end = 2022)
+
+# Criar gráfico de painel
+grafico_painel <- ggplot(eletricidade_br, aes(x = year, y = EG.ELC.ACCS.ZS)) +
+  geom_point(size = 3, color = "blue", alpha = 0.5) +
+  geom_line(color = "blue", alpha = 0.5) +
+  labs(title = "Acesso à Eletricidade ao Longo do Tempo (Brasil)",
+       x = "Ano",
+       y = "Percentual de Acesso à Eletricidade (%)") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
+
+# Exibir gráfico
+print(grafico_painel)
+```
+
+# Gráfico de Corte Transversal: Acesso à Eletricidade em 2023 (Brasil vs. EUA)
+
+Este gráfico de corte transversal compara o percentual de acesso à eletricidade entre Brasil e Estados Unidos no ano de 2022, oferecendo uma visão instantânea das diferenças entre os dois países.
+
+------------------------------------------------------------------------
+
+```{r}
+# Baixar dados para Brasil e EUA
+dados <- WDI(country = c("BR", "US"),
+             indicator = "EG.ELC.ACCS.ZS",
+             start = 2022,
+             end = 2022)
+
+# Renomear coluna e remover valores NA
+dados <- dados %>%
+  rename(acesso_eletricidade = EG.ELC.ACCS.ZS) %>%
+  na.omit()
+
+# Criar gráfico de corte transversal
+grafico_corte <- ggplot(dados, aes(x = country, y = acesso_eletricidade, fill = country)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  labs(title = "Acesso à Eletricidade em 2022: Brasil vs. EUA",
+       y = "Percentual de Acesso à Eletricidade (%)",
+       x = "País") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  scale_fill_manual(values = c("BR" = "blue", "US" = "red"))
+
+# Exibir gráfico
+print(grafico_corte)
+```
+
+## Gráfico de Série Temporal: Acesso à Eletricidade no Brasil
+
+Este gráfico de série temporal ilustra a evolução anual do acesso à eletricidade no Brasil de 2000 a 2022, com detalhes sobre tendências ao longo do tempo.
+
+```{r}
+# Criar gráfico de série temporal
+grafserie <- ggplot(eletricidade_br, mapping = aes(x = year, y = EG.ELC.ACCS.ZS)) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  geom_point(size = 2, color = "steelblue") +
+  labs(title = "Evolução do Acesso à Eletricidade no Brasil",
+       subtitle = "Dados anuais",
+       y = "Percentual de Acesso (%)",
+       x = "Ano",
+       caption = "Fonte: Banco Mundial") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+        plot.subtitle = element_text(hjust = 0.5, color = "gray50"),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        panel.grid.minor = element_blank()) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  scale_x_continuous(breaks = scales::pretty_breaks())
+
+# Exibir gráfico
+print(grafserie)
+```
+
+## Conclusão
+
+Os gráficos apresentados demonstram a evolução do acesso à eletricidade no Brasil e a comparação com os Estados Unidos. A partir dos dados de 2023, podemos observar as diferenças de acesso entre os dois países. A análise temporal também destaca a evolução desse indicador ao longo dos anos no Brasil.O Brasil teve avanços significativos ao longo do tempo, enquanto os EUA mantêm acesso próximo a 100%.
+
+# Fonte dos Dados
+
+Os dados utilizados neste estudo foram extraídos da **API do Banco Mundial**, especificamente do indicador **EG.ELC.ACCS.ZS**, que representa o percentual da população com acesso à eletricidade.
