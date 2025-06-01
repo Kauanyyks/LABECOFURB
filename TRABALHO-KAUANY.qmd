@@ -21,7 +21,8 @@ library(ggplot2)  # Para criar gráficos
 library(scales)   # Para formatar o eixo y em percentual
 library(dplyr)    # Para manipulação de dados
 ```
----
+
+------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
 
