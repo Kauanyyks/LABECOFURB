@@ -1,0 +1,114 @@
+---
+title: "Trabalho 2 - Análise do PIB em R$ Correntes"
+author: "Kauany Kanitz dos Santos"
+format:
+  html:
+    theme: cosmo
+    toc: false
+    number-sections: false
+    self-contained: true
+editor: visual
+---
+
+# Introdução
+
+O Produto Interno Bruto (PIB) em valores correntes representa o valor total de todos os bens e serviços finais produzidos em um país durante um período específico, medido em reais sem considerar os efeitos da inflação. É uma medida fundamental para entender o tamanho nominal da economia brasileira.
+
+Neste relatório, será apresentada a série histórica do PIB trimestral em R\$ milhões, com base na série 4380 do Banco Central do Brasil. Os dados serão visualizados por meio de um gráfico interativo.
+
+# **Objetivo**
+
+Demonstrar a evolução do PIB brasileiro ao longo do tempo por meio de gráficos interativos e análises descritivas.
+
+# **Metodologia**
+
+Os dados utilizados foram extraídos diretamente da série 4380 do Banco Central do Brasil.
+
+# **Gráfico**
+
+O gráfico acima ilustra a evolução do Produto Interno Bruto (PIB) trimestral brasileiro em reais correntes , com base na série histórica utilizada no relatório. Os valores representam o total da produção econômica do país em cada trimestre, expressos em R\$ milhões , sem ajuste para a inflação.
+
+A análise do PIB em termos nominais permite visualizar o crescimento aparente da economia ao longo do tempo, considerando os preços vigentes em cada período. Isso inclui os efeitos de aumento de preços, o que pode gerar uma percepção ampliada de crescimento mesmo na ausência de expansão real da produção.
+
+No gráfico, é possível observar a trajetória ascendente do PIB ao longo dos anos, com variações sazonais típicas de dados trimestrais. Algumas oscilações menores podem indicar períodos de desaceleração ou ajustes econômicos em resposta a fatores como política fiscal, choques externos ou mudanças na atividade interna.
+
+Este tipo de visualização é essencial para compreender tendências macroeconômicas e serve como ponto de partida para análises mais aprofundadas, como o cálculo do crescimento real do PIB, a decomposição setorial da economia ou a comparação com indicadores correlatos.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: load-packages
+#| include: false
+library(rbcb)
+library(tidyverse)
+library(lubridate)
+
+if (!requireNamespace("gganimate", quietly = TRUE)) {
+  install.packages("gganimate", repos = "https://cloud.r-project.org/")
+}
+library(gganimate)
+
+if (!requireNamespace("gifski", quietly = TRUE)) {
+  install.packages("gifski", repos = "https://cloud.r-project.org/")
+}
+library(gifski)
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: grafico-pibtri
+#| results: 'asis'
+
+library(ggplot2)
+library(gganimate)
+library(rbcb)
+library(tidyverse)
+library(lubridate)
+
+# Baixar dados mensais da Importação
+codigo_pibtri <- 4380
+pibtri_mensal <- get_series(
+  codigo_pibtri,
+  start_date = "2010-01-01",
+  end_date = "2024-12-31"
+) %>%
+  rename(data = date, valor = `4380`) %>%
+  mutate(ano = year(data))
+
+# Calcular acumulado anual (somando as variações mensais)
+pibtri_anual <- pibtri_mensal %>%
+  group_by(ano) %>%
+  summarise(pibtri_acumulado = sum(valor, na.rm = TRUE)) %>%
+  filter(ano <= 2024)
+
+# Criar gráfico animado
+grafico_pibtri <- ggplot(pibtri_anual, aes(x = ano, y = pibtri_acumulado)) +
+  geom_line(color = "#4A90E2", size = 1) +
+  geom_point(color = "#4A90E2", size = 3) +
+  scale_x_continuous(breaks = seq(2010, 2024, by = 5)) +
+  scale_y_continuous(labels = scales::label_number(scale = 1e-6, suffix = " mi")) +
+  labs(
+    title = "PIB(2010–2024)",
+    x = "Ano",
+    y = "US$ (mil)"
+  ) +
+  theme_minimal() +
+  transition_reveal(ano)
+
+# Salvar como GIF
+anim_save("pibtri_animado.gif", grafico_pibtri, renderer = gifski_renderer())
+
+# Exibir no HTML
+cat('![](pibtri_animado.gif)')
+```
+
+# Conclusão
+
+Este gráfico fornece uma visão clara da evolução do PIB brasileiro ao longo de mais de uma década. Embora os dados estejam em valores nominais, eles são fundamentais para entender o crescimento absoluto da economia. Para análises mais profundas, especialmente sobre o desempenho real da economia, recomenda-se complementar essa análise com dados deflacionados.
+
+# Referências
+
+Banco Central do Brasil. Série 4380 – PIB Trimestral.
