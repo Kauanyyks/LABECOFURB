@@ -1,0 +1,94 @@
+---
+title: "Mapa Mundial de Mortes Relacionadas a Batalhas (1990-2019)"
+format: html
+editor: visual
+execute:
+  freeze: auto
+  warning: false
+  message: false
+---
+
+Feito por Kauany K. Dos Santos, Matheus B. do Goes, Nathaly R. Hermann
+
+## Introdução
+
+Neste trabalho, analisamos a variável "Battle-related deaths (number of people)", disponível na base de dados do Banco Mundial (WDI), que estima o número de mortes associadas a conflitos armados em cada país, no período de 1990 a 2019. Essa variável mede os óbitos diretamente causados por batalhas e confrontos militares, sendo uma métrica importante para entender os impactos de guerras civis, invasões, insurgências e conflitos prolongados.
+
+A escolha da variável se justifica por sua relevância geopolítica e social. Ao mapear os países que mais registraram mortes em batalhas ao longo dessas três décadas, é possível visualizar padrões históricos de instabilidade, violações de direitos humanos e crises prolongadas que afetam o desenvolvimento econômico e social das nações. Além disso, a visualização geográfica dos dados permite identificar clusters regionais de violência e contrastes entre zonas de paz e guerra.
+
+Durante o período analisado, alguns países se destacaram por apresentar elevados números de mortes em batalhas, como Sudão, República Democrática do Congo, Afeganistão, Síria e Iraque. Esses países enfrentaram conflitos civis intensos, guerras prolongadas ou intervenções estrangeiras, o que explica os picos observados no gráfico.
+
+Um caso particularmente interessante é o da Rússia em 2010, que aparece com um aumento considerável de mortes. Esse dado pode estar associado à continuação do conflito na Chechênia, às operações militares no Cáucaso Norte e ao envolvimento indireto em outros conflitos regionais. Ainda que a guerra da Ucrânia tenha eclodido apenas em 2014, a década anterior já marcava uma postura mais ativa da Rússia no uso da força em sua esfera de influência.
+
+A análise espacial apresentada neste trabalho permite, portanto, não apenas identificar os países mais afetados por batalhas, mas também estimular a reflexão sobre as causas geopolíticas e humanitárias que levaram a tais tragédias. Ao quantificar a violência armada, buscamos compreender melhor as consequências dos conflitos e reforçar a importância da paz como elemento essencial para o progresso humano.
+
+```{r include=FALSE}
+# Carregando pacotes necessários
+library(WDI)
+library(dplyr)
+library(ggplot2)
+library(gganimate)
+library(rnaturalearth)
+library(sf)
+library(viridis)
+library(countrycode)
+
+# Informações do indicador
+Data_info <- WDI_data
+indicator <- c("Battle_related_deaths" = 'VC.BTL.DETH')
+
+# Baixando os dados
+datWM7 <- WDI(indicator, country = "all", start = 1990, end = 2019)
+
+# Obter nome e fonte do indicador
+name_battles <- Data_info$series %>%
+  filter(indicator == "VC.BTL.DETH") %>%
+  pull(name)
+
+source_battles <- Data_info$series %>%
+  filter(indicator == "VC.BTL.DETH") %>%
+  pull(sourceOrganization)
+
+# Mapa base
+world <- ne_countries(returnclass = "sf")
+
+# Preparando os dados
+dat_plot <- world %>%
+  left_join(datWM7, by = c("iso_a2" = "iso2c")) %>%
+  filter(iso_a2 != "ATA") %>%  # Remove Antártida
+  mutate(Battle_related_deaths = ifelse(is.na(Battle_related_deaths), 0, Battle_related_deaths))
+
+# Plot com animação
+p <- ggplot(dat_plot, aes(fill = Battle_related_deaths, geometry = geometry)) +
+  geom_sf(color = "royalblue", size = 0.1) +
+  scale_fill_viridis_c(option = "inferno", trans = "sqrt", na.value = "grey90") +
+  labs(
+    title = paste0(name_battles, " em {closest_state}"),
+    fill = "Mortes",
+    caption = paste0("Fonte: ", source_battles)
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  transition_states(year, transition_length = 1, state_length = 1) +
+  ease_aes('linear')
+```
+
+```{r echo=FALSE}
+p
+```
+
+# **Conclusão**
+
+Entre 1990 e 2019, o comportamento das mortes em conflitos armados foi caracterizado por ciclos notáveis:
+
+-   **Pico** no fim dos anos 1990, fruto da instabilidade pós-Guerra Fria.
+
+-   **Declínio** acentuado no início dos anos 2000.
+
+-   **Recrudescimento** de intensidade entre 2014 e 2015, impulsionado por grandes conflitos regionais, especialmente a guerra na Síria.
+
+-   **Redução gradual** após 2015, embora os níveis ainda sejam maiores que na década anterior.
+
+Embora em 2019 os números já houvessem recuado consideravelmente (aproximadamente 4.543 em países de renda média-baixa e 50.004 em situações frágeis), o patamar continua suficientemente alto para manter a atenção sobre prevenção de conflitos e reconstrução de paz.
+
+Esses dados revelam que, apesar das oscilações, desde meados dos anos 2000 houve avanços contínuos, interrompidos por crises pontuais. O desafio permanece grande, com claras indicações de que esforços sustentados são essenciais para consolidar a tendência de redução de mortos em conflitos armados.
